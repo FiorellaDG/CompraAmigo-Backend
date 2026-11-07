@@ -22,7 +22,7 @@ public class CarritoController {
     private CarritoService carritoService;
 
 
-    // AGREGAR PRODUCTO
+    // Agregar producto
 
     @PostMapping("/carrito/item")
     @PreAuthorize("hasRole('USER')")
@@ -37,14 +37,10 @@ public class CarritoController {
     }
 
 
-    // CONSULTAR CARRITO
+    // Consultar carrito
 
-    @GetMapping(
-            "/carrito/usuario/{userId}"
-    )
-    @PreAuthorize(
-            "hasAnyRole('USER','ADMIN')"
-    )
+    @GetMapping("/carrito/usuario/{userId}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<
             List<CarritoItemDTO>>
     listarCarrito(
@@ -57,17 +53,13 @@ public class CarritoController {
     }
 
 
-    // CAMBIAR CANTIDAD
-
-    @PutMapping(
-            "/carrito/item/{id}"
-    )
+    // Cambiar cantidad
+    @PutMapping("/carrito/item/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CarritoItemDTO>
     modificarCantidad(
 
             @PathVariable Long id,
-
             @RequestParam Integer cantidad) {
 
         return ResponseEntity.ok(
@@ -80,16 +72,13 @@ public class CarritoController {
     }
 
 
-    // ELIMINAR PRODUCTO
+    // eliminar producto
 
-    @DeleteMapping(
-            "/carrito/item/{id}"
-    )
+    @DeleteMapping("/carrito/item/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void>
     eliminarProducto(
             @PathVariable Long id) {
-
         carritoService
                 .eliminarProducto(id);
 
