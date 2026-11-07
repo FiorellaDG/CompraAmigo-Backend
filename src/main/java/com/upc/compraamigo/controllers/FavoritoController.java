@@ -15,6 +15,7 @@ import java.util.List;
         allowCredentials = "true",
         exposedHeaders = "Authorization"
 )
+
 @RequestMapping("/api")
 public class FavoritoController {
 
