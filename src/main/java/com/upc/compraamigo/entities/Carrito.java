@@ -11,8 +11,7 @@ import lombok.*;
 @Entity
 @Table(name = "carritos")
 public class Carrito {
-
-    // Ingreso datos
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
