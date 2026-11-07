@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "${ip.frontend}", allowCredentials = "true", exposedHeaders = "Authorization")
+
 @RequestMapping("/api")
 public class CategoriaController {
     @Autowired
