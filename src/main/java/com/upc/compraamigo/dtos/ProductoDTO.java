@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class ProductoDTO {
     private Long id;
     private String nombre;

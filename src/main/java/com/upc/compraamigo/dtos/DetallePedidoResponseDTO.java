@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class DetallePedidoResponseDTO {
     private Long detalleId;
     private Long productoID;

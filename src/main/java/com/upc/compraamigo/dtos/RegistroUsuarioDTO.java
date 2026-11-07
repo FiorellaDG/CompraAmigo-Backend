@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class RegistroUsuarioDTO {
     private String nombre;
     private String username;

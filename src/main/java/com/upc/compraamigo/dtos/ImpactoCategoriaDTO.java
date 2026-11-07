@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ImpactoCategoriaDTO {
     private String categoria;
     private long unidadesVendidas;

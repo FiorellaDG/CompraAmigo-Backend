@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ImpactoUsuarioDTO {
     private Long userID;
     private long totalPedidos;
