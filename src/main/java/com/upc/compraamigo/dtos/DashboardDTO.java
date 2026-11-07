@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class DashboardDTO {
     private double ventasDia;
     private double ventasMes;

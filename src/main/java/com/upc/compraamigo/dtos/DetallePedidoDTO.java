@@ -7,6 +7,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class DetallePedidoDTO {
     private Producto producto = new Producto();
     private int cantidad;

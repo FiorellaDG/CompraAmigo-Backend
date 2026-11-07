@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class ConsultaChatDTO {
     private Long id;
     private LocalDateTime fecha;
