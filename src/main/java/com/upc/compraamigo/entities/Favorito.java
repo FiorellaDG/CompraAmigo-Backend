@@ -15,6 +15,7 @@ import lombok.*;
                 @UniqueConstraint(columnNames = {"user_id", "producto_id"})
         }
 )
+
 public class Favorito {
 
     @Id
