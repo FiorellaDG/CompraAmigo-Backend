@@ -25,7 +25,7 @@ public class UserService {
         roleRepository.save(role);
     }
 
-    public Role buscarRolPorId(Long id) {
+    public Role buscarRol(Long id) {
         return roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado con ID: " + id));
     }
