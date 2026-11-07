@@ -14,6 +14,7 @@ import lombok.*;
                 @UniqueConstraint(columnNames = {"carrito_id", "producto_id", "talla"})
         }
 )
+
 public class DetalleCarrito {
 
     @Id
