@@ -10,7 +10,6 @@ import java.util.List;
 
 @Repository
 public interface ProductoRepositorio extends JpaRepository<Producto, Long> {
-
     @Query("SELECT p FROM Producto p " +
             "WHERE (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
             "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +

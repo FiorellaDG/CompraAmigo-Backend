@@ -8,8 +8,6 @@ import java.util.List;
 
 @Repository
 public interface FavoritoRepositorio extends JpaRepository<Favorito, Long> {
-
     List<Favorito> findByUserId(Long userId);
-
     boolean existsByUserIdAndProductoId(Long userId, Long productoId);
 }

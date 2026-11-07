@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface PedidoRepositorio extends JpaRepository<Pedido, Long> {
+
     List<Pedido> findByUserId(Long userId);
     List<Pedido> findByUserIdOrderByFechaDesc(Long userId);
     long countByUserId(Long userId);
