@@ -24,7 +24,6 @@ public class UserController {
         if (userService.existeUsername(registroDTO.getUsername())) {
             throw new RuntimeException("El correo ya se encuentra registrado");
         }
-
         Role roleUser = userService.buscarRolPorNombre("ROLE_USER");
 
         User user = new User();
