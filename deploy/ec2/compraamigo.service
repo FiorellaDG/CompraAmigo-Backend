@@ -1,0 +1,19 @@
+[Unit]
+Description=CompraAmigo Spring Boot
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=compraamigo
+Group=compraamigo
+WorkingDirectory=/opt/compraamigo
+Environment=SPRING_PROFILES_ACTIVE=cloud
+EnvironmentFile=/etc/compraamigo/compraamigo.env
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -XX:+ExitOnOutOfMemoryError -jar /opt/compraamigo/backend.jar
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
