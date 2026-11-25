@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Setter
 @Getter
@@ -21,6 +22,7 @@ public class Pedido {
 
     private LocalDate fecha;
     private String estado;
+    private LocalDateTime estadoActualizadoEn;
 
     private String nombreReceptor;
     private String telefono;
@@ -35,6 +37,7 @@ public class Pedido {
     private double subtotal;
     private double total;
     private double co2Ahorrado;
+    private LocalDateTime correoEnviadoEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

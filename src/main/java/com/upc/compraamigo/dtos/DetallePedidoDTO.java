@@ -1,6 +1,5 @@
 package com.upc.compraamigo.dtos;
 
-import com.upc.compraamigo.entities.Producto;
 import lombok.*;
 
 @Setter
@@ -8,7 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DetallePedidoDTO {
-    private Producto producto = new Producto();
+    private ProductoReferencia producto;
     private int cantidad;
     private String talla;
+
+    public record ProductoReferencia(Long id) {}
 }

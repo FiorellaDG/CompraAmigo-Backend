@@ -8,19 +8,26 @@ import com.upc.compraamigo.entities.DetallePedido;
 import com.upc.compraamigo.entities.Pedido;
 import com.upc.compraamigo.entities.Producto;
 import com.upc.compraamigo.repositories.DetallePedidoRepositorio;
+import com.upc.compraamigo.repositories.CarritoRepositorio;
+import com.upc.compraamigo.repositories.DetalleCarritoRepositorio;
 import com.upc.compraamigo.repositories.PedidoRepositorio;
 import com.upc.compraamigo.repositories.ProductoRepositorio;
 import com.upc.compraamigo.security.entities.User;
 import com.upc.compraamigo.security.repositories.UserRepository;
 import com.upc.compraamigo.services.PedidoService;
+import com.upc.compraamigo.services.CarritoService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -39,10 +46,50 @@ public class PedidoServiceImpl implements PedidoService {
     private ProductoRepositorio productoRepositorio;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ApplicationEventPublisher eventos;
+    @Autowired
+    private CarritoService carritoService;
+    @Autowired
+    private CarritoRepositorio carritoRepositorio;
+    @Autowired
+    private DetalleCarritoRepositorio detalleCarritoRepositorio;
+
+    @Override
+    public TotalCheckout cotizarCarrito(Long userId, String envio) {
+        if (!Set.of("estandar", "express", "recojo").contains(envio)) {
+            throw new IllegalArgumentException("Método de envío inválido");
+        }
+        var items = carritoService.listarCarrito(userId);
+        double subtotal = items.stream().mapToDouble(item -> item.getSubtotal()).sum();
+        double costoEnvio = items.isEmpty() ? 0 : calcularCostoEnvio(envio, subtotal);
+        return new TotalCheckout(subtotal, costoEnvio, subtotal + costoEnvio);
+    }
+
+    @Transactional(rollbackOn = Exception.class)
+    @Override
+    public PedidoDTO confirmarCarrito(CrearPedidoRequestDTO requestDTO) {
+        userRepository.bloquearPorId(requestDTO.getUserID())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        var carrito = carritoRepositorio.findByUserId(requestDTO.getUserID())
+                .orElseThrow(() -> new IllegalArgumentException("Tu carrito está vacío"));
+        var items = detalleCarritoRepositorio.bloquearLineas(carrito.getId());
+        requestDTO.setDetalles(items.stream().map(item -> new DetallePedidoDTO(
+                new DetallePedidoDTO.ProductoReferencia(item.getProducto().getId()),
+                item.getCantidad(), item.getTalla())).toList());
+        Pedido pedido = guardarPedido(requestDTO);
+        detalleCarritoRepositorio.deleteAll(items);
+        return convertirDTO(pedido);
+    }
 
     @Transactional(rollbackOn = Exception.class)
     @Override
     public boolean crearPedido(CrearPedidoRequestDTO requestDTO) {
+        guardarPedido(requestDTO);
+        return true;
+    }
+
+    private Pedido guardarPedido(CrearPedidoRequestDTO requestDTO) {
         if (requestDTO.getDetalles() == null || requestDTO.getDetalles().isEmpty()) {
             throw new IllegalArgumentException("El pedido debe contener al menos un producto");
         }
@@ -54,6 +101,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setUser(user);
         pedido.setFecha(LocalDate.now());
         pedido.setEstado("En preparación");
+        pedido.setEstadoActualizadoEn(LocalDateTime.now());
         pedido.setNombreReceptor(requestDTO.getNombreReceptor());
         pedido.setTelefono(requestDTO.getTelefono());
         pedido.setCiudad(requestDTO.getCiudad());
@@ -67,13 +115,23 @@ public class PedidoServiceImpl implements PedidoService {
         double co2Ahorrado = 0;
 
         for (DetallePedidoDTO detalleDTO : requestDTO.getDetalles()) {
+            if (detalleDTO == null || detalleDTO.getProducto() == null || detalleDTO.getProducto().id() == null) {
+                throw new IllegalArgumentException("Debes indicar el producto del pedido");
+            }
             if (detalleDTO.getCantidad() <= 0) {
                 throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
             }
+        }
 
-            Producto producto = productoRepositorio.findById(detalleDTO.getProducto().getId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Producto no encontrado con ID: " + detalleDTO.getProducto().getId()));
+        var ids = requestDTO.getDetalles().stream().map(d -> d.getProducto().id()).distinct().toList();
+        var productos = productoRepositorio.bloquearProductos(ids).stream()
+                .collect(Collectors.toMap(Producto::getId, Function.identity()));
+        for (DetallePedidoDTO detalleDTO : requestDTO.getDetalles()) {
+            Long productoId = detalleDTO.getProducto().id();
+            Producto producto = productos.get(productoId);
+            if (producto == null) {
+                throw new IllegalArgumentException("Producto no encontrado con ID: " + productoId);
+            }
 
             if (producto.getStock() < detalleDTO.getCantidad()) {
                 throw new IllegalArgumentException("Stock insuficiente para el producto: " + producto.getNombre());
@@ -107,7 +165,8 @@ public class PedidoServiceImpl implements PedidoService {
             detallePedidoRepositorio.save(detalle);
         }
 
-        return true;
+        eventos.publishEvent(new CorreoPedidoService.PedidoConfirmado(pedidoGuardado.getPedidoId()));
+        return pedidoGuardado;
     }
 
     @Override
@@ -143,9 +202,12 @@ public class PedidoServiceImpl implements PedidoService {
             );
         }
 
-        Pedido pedido = pedidoRepositorio.findById(pedidoId)
+        Pedido pedido = pedidoRepositorio.bloquearPorId(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado con ID: " + pedidoId));
-        pedido.setEstado(estado);
+        if (!estado.equals(pedido.getEstado())) {
+            pedido.setEstado(estado);
+            pedido.setEstadoActualizadoEn(LocalDateTime.now());
+        }
         return convertirDTO(pedidoRepositorio.save(pedido));
     }
 
@@ -154,6 +216,7 @@ public class PedidoServiceImpl implements PedidoService {
         dto.setPedidoId(pedido.getPedidoId());
         dto.setFecha(pedido.getFecha());
         dto.setEstado(pedido.getEstado());
+        dto.setEstadoActualizadoEn(pedido.getEstadoActualizadoEn());
         dto.setUserID(pedido.getUser() != null ? pedido.getUser().getId() : null);
         dto.setNombreUsuario(pedido.getUser() != null ? pedido.getUser().getNombre() : null);
         dto.setNombreReceptor(pedido.getNombreReceptor());

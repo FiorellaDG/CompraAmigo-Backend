@@ -15,6 +15,10 @@ public class User {
     private Long id;
 
     private String nombre;
+    private String telefonoPerfil;
+    private String ciudadPerfil;
+    private String distritoPerfil;
+    private String direccionPerfil;
 
     @Column(nullable = false, unique = true)
     private String username;

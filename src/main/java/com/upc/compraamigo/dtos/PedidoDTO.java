@@ -3,6 +3,7 @@ package com.upc.compraamigo.dtos;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class PedidoDTO {
     private Long pedidoId;
     private LocalDate fecha;
     private String estado;
+    private LocalDateTime estadoActualizadoEn;
 
     private Long userID;
     private String nombreUsuario;
