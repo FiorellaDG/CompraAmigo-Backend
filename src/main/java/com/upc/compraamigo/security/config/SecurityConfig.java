@@ -1,5 +1,6 @@
 package com.upc.compraamigo.security.config;
 
+import com.upc.compraamigo.config.SpaRenderConfig;
 import com.upc.compraamigo.security.filters.JwtRequestFilter;
 import com.upc.compraamigo.security.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -45,13 +49,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, Environment environment) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> {
+                    if (environment.acceptsProfiles(Profiles.of("render"))) {
+                        auth.requestMatchers(HttpMethod.GET, SpaRenderConfig.RUTAS.toArray(String[]::new)).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/index.html", "/images/**", "/*.png", "/*.js", "/*.css", "/*.ico").permitAll();
+                    }
+                    auth
                         .requestMatchers("/api/authenticate", "/api/register", "/api/health", "/error").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated();
+                })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

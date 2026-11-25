@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: compraamigo-demo-upc
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: deploy/render/Dockerfile
+    healthCheckPath: /api/health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: compraamigo-demo-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: compraamigo-demo-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: compraamigo-demo-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: compraamigo-demo-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: compraamigo-demo-db
+          property: password
+      - key: JWT_SEED_A
+        generateValue: true
+      - key: JWT_SEED_B
+        generateValue: true
+      - key: APP_INIT_ADMIN_EMAIL
+        value: administrador@compraamigo.test
+      - key: APP_INIT_ADMIN_PASSWORD
+        generateValue: true
+
+databases:
+  - name: compraamigo-demo-db
+    plan: free
+    region: virginia
+    databaseName: db_compraamigo
+    user: compraamigo
+    ipAllowList: []
